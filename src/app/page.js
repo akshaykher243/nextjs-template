@@ -3,9 +3,14 @@
 
 import Link from 'next/link';
 
+// Configure Edge Runtime for Cloudflare Pages
+export const runtime = 'edge';
+
 async function fetchPages() {
   try {
-    const response = await fetch(`${process.env.PAYLOAD_URL}/api/pages`, {
+    // Use fallback URL for build time when env var might not be available
+    const baseUrl = process.env.PAYLOAD_URL || process.env.NEXT_PUBLIC_PAYLOAD_URL || 'http://localhost:3001';
+    const response = await fetch(`${baseUrl}/api/pages`, {
       cache: 'no-store', // Disable caching for fresh data
     });
     
@@ -22,7 +27,15 @@ async function fetchPages() {
 }
 
 export default async function HomePage() {
-  const pages = await fetchPages();
+  let pages = [];
+  
+  try {
+    pages = await fetchPages();
+  } catch (error) {
+    console.error('Failed to fetch pages during build:', error);
+    // Return empty pages array for build time
+    pages = [];
+  }
   
   console.log('Fetched pages:', pages);
   
@@ -44,7 +57,7 @@ export default async function HomePage() {
         )}
       </ul>
       <p>
-        Go to <a href={`${process.env.NEXT_PUBLIC_PAYLOAD_URL}/admin`} target="_blank" rel="noopener noreferrer">Payload CMS Admin</a> to add content.
+        Go to <a href={`${process.env.NEXT_PUBLIC_PAYLOAD_URL || 'http://localhost:3001'}/admin`} target="_blank" rel="noopener noreferrer">Payload CMS Admin</a> to add content.
       </p>
     </main>
   );

@@ -12,6 +12,12 @@ const nextConfig = {
   publicRuntimeConfig: {
     NEXT_PUBLIC_PAYLOAD_URL: process.env.NEXT_PUBLIC_PAYLOAD_URL,
   },
+  // Configure for static export if needed
+  output: 'standalone',
+  // Disable image optimization for Edge Runtime
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

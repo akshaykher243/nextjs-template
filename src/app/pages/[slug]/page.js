@@ -2,9 +2,14 @@
 
 import Link from 'next/link';
 
+// Configure Edge Runtime for Cloudflare Pages
+export const runtime = 'edge';
+
 async function fetchPage(slug) {
   try {
-    const response = await fetch(`${process.env.PAYLOAD_URL}/api/pages?where[slug][equals]=${slug}`, {
+    // Use fallback URL for build time when env var might not be available
+    const baseUrl = process.env.PAYLOAD_URL || process.env.NEXT_PUBLIC_PAYLOAD_URL || 'http://localhost:3001';
+    const response = await fetch(`${baseUrl}/api/pages?where[slug][equals]=${slug}`, {
       cache: 'no-store',
     });
     
@@ -21,7 +26,15 @@ async function fetchPage(slug) {
 }
 
 export default async function PageDetail({ params }) {
-  const page = await fetchPage(params.slug);
+  let page = null;
+  
+  try {
+    page = await fetchPage(params.slug);
+  } catch (error) {
+    console.error('Failed to fetch page during build:', error);
+    // Return null for build time
+    page = null;
+  }
   
   if (!page) {
     return (
@@ -46,7 +59,14 @@ export default async function PageDetail({ params }) {
 }
 
 export async function generateMetadata({ params }) {
-  const page = await fetchPage(params.slug);
+  let page = null;
+  
+  try {
+    page = await fetchPage(params.slug);
+  } catch (error) {
+    console.error('Failed to fetch page metadata during build:', error);
+    page = null;
+  }
   
   return {
     title: page ? page.title : 'Page Not Found',
